@@ -1,5 +1,6 @@
 debugpy
 cmake
+imutils
 opencv-python
 opencv-contrib-python
 python-dotenv
