@@ -1,3 +1,4 @@
+debugpy
 cmake
 opencv-python
 opencv-contrib-python
