@@ -13,3 +13,5 @@ LICENSE)
 ```markdown
 pip3 install bakachon
 ```
+
+> Wikiは[こちら](https://github.com/takkii/picture/wiki/manual)。
