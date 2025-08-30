@@ -2,8 +2,6 @@
 License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](
 LICENSE)
 
-### 写真機
-
 <div align="center">
     <img src="https://github.com/takkii/hyokaproject/blob/main/logo/python.gif" alt="python">
 </div>
