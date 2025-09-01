@@ -1,9 +1,14 @@
+import cv2
 import debugpy
-import bakachon as baka
+import face_recognition
+import japanize_matplotlib
+import golden_eagle as ga
 import gc
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy.typing as npt
 import os
 import threading
-import traceback
 
 from typing import Optional
 from os.path import join, dirname
@@ -14,9 +19,9 @@ load_dotenv(verbose=True)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
-PCI = os.environ.get("picture_images")
-BCF = os.environ.get("bakachon_folder")
-LOF = os.environ.get("log_folder")
+BFP = os.environ.get("before_param")
+AFP = os.environ.get("after_param")
+GAN = os.environ.get("ga_num_run") or ""
 
 
 # Use SublimeDebugger, debugpy lib.
@@ -53,32 +58,128 @@ class Face(threading.Thread):
 
     # run method
     def run(self):
-        baka.pull_down_a_shutter(str(PCI), str(BCF))
+        # Specify the path of the face photo to be compared.
+        my_before = face_recognition.load_image_file(
+            os.path.expanduser(str(BFP)))
+        my_after = face_recognition.load_image_file(
+            os.path.expanduser(str(AFP)))
+
+        # The default is “hog”.
+        lo_before = face_recognition.face_locations(my_before, model='cnn')
+        lo_after = face_recognition.face_locations(my_after, model='cnn')
+
+        # A list of dicts of face feature locations (eyes, nose, etc)
+        # model – Optional - which model to use.
+        # “large” (default) or “small”.
+        around_the_face_b = face_recognition.face_landmarks(
+            my_before, lo_before)
+        around_the_face_a = face_recognition.face_landmarks(my_after, lo_after)
+
+        # facecompare version.
+        print("golden-eagle_version: " + ga.__version__)
+
+        # golden-eagle accuary number.
+        ga_lose: Optional[str] = GAN
+
+        # value is 0.6 and lower numbers make face comparisons more strict:
+        ga.compare_before_after(my_before, my_after, float(ga_lose))
+
+        # The data is processed as a feature quantity.
+        en_b = face_recognition.face_encodings(my_before)[0]
+        en_a = face_recognition.face_encodings(my_after)[0]
+        face_d: npt.NDArray = face_recognition.face_distance([en_b], en_a)
+        hyoka: npt.DTypeLike = (np.floor(face_d * 1000).astype(int) / 1000)
+
+        # Accuracy evaluation, no face photo editing.
+        accuracy = "accuracy:" + str(hyoka)
+        print(accuracy)
+
+        # Face coordinate.
+        print("Before Image, Get face coordinates  :" + str(lo_before))
+        print("After Image, Get face coordinates :" + str(lo_after))
+
+        # Get around the face.
+        print("Before Image, Get around the face :" + str(around_the_face_b))
+        # print("After Image, Get around the face :" + str(around_the_face_a))
+
+        # Use dlib, face recognition.
+        cv2.startWindowThread()
+        # Use face recognition my_after/my_before.
+        cv2.imshow('Yourself before picture image.', my_before)
+        cv2.imshow('Yourself after picture image.', my_after)
+        # Window closes in 8 seconds
+        cv2.waitKey(15000)
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+
+        # 日本語訳
+        jp_names = {
+            'nose_bridge': '鼻筋',
+            'nose_tip': '鼻先',
+            'top_lip': '上唇',
+            'bottom_lip': '下唇',
+            'left_eye': '左目',
+            'right_eye': '左目',
+            'left_eyebrow': '左眉毛',
+            'right_eyebrow': '右眉毛',
+            'chin': '下顎'
+        }
+
+        # my_before load image, Plotting face recognition with matplotlib.
+        fig = plt.figure('Yourself before picture image.',
+                         figsize=(7, 7),
+                         facecolor='lightskyblue',
+                         layout='constrained')
+        bx = fig.add_subplot()
+        bx.imshow(my_before)
+        bx.set_axis_off()
+        for face in around_the_face_b:
+            for name, points in face.items():
+                points = np.array(points)
+
+                bx.plot(points[:, 0],
+                        points[:, 1],
+                        'o-',
+                        ms=3,
+                        label=jp_names[name])
+                bx.legend(fontsize=14)
+                bx.set_title('Face Recognition Range')
+
+        plt.show()
+
+        # my_after load images, Plotting face recognition with matplotlib.
+        fig = plt.figure('Yourself after picture image.',
+                         figsize=(7, 7),
+                         facecolor='deeppink',
+                         layout='constrained')
+        ax = fig.add_subplot()
+        ax.imshow(my_after)
+        ax.set_axis_off()
+        for face in around_the_face_a:
+            for name, points in face.items():
+                points = np.array(points)
+                ax.plot(points[:, 0],
+                        points[:, 1],
+                        'o-',
+                        ms=3,
+                        label=jp_names[name])
+                ax.legend(fontsize=14)
+                ax.set_title('Face Recognition Range')
+
+        plt.show()
 
 
 # try ~ except ~ finally.
 try:
     thread = Face()
     thread.run()
-    # TraceBack.
-except Exception:
-    # Specify the folder to record the exception log.
-    except_folder: Optional[str] = os.path.expanduser(str(LOF))
-    # Specify the file to log exception occurrences.
-    except_f: Optional[str] = os.path.expanduser('~/' + str(LOF) + '/d.log')
+# Custom Exception, raise throw.
+except ValueError as ext:
+    print(ext)
+    raise RuntimeError from None
 
-    # Load the dictionary.
-    if os.path.isdir(os.path.expanduser(except_folder)):
-        # Log writing process.
-        with open(os.path.expanduser(except_f), 'a') as log_py:
-            traceback.print_exc(file=log_py)
-
-            # throw except.
-            raise RuntimeError from None
-
-        # Current directory Not Found.
-    else:
-        # Unique exception occurrence.
-        raise ValueError("None, Please Check the Current directory.")
+# Once Exec.
 finally:
+    # GC collection.
     gc.collect()
