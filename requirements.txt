@@ -13,5 +13,5 @@ pydantic
 python-dotenv
 pytk
 Pillow
-setuptools<81.0
+setuptools
 wheel
