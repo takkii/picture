@@ -10,6 +10,3 @@ LICENSE) [![PyPI Downloads](https://static.pepy.tech/personalized-badge/bakachon
     <b><p>このプロジェクトは、顔写真を撮影します。</p></b>
 </div>
 <br />
-<div align="center">
-    <b>pip3 install bakachon</b>
-</div>
