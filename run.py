@@ -14,6 +14,8 @@ from typing import Optional
 from os.path import join, dirname
 from dotenv import load_dotenv
 
+__all__ = ['japanize_matplotlib']
+
 load_dotenv(verbose=True)
 
 dotenv_path = join(dirname(__file__), '.env')
@@ -27,7 +29,7 @@ GAN = os.environ.get("ga_num_run") or ""
 # Use SublimeDebugger, debugpy lib.
 def debug_wait_for_attach(listen_to):
     scoop: Optional[str] = os.path.expanduser(
-        '~/scoop/apps/python/current/python.exe')
+        '~/scoop/apps/python313/current/python.exe')
     pyenv: Optional[str] = os.path.expanduser('~/.pyenv/shims/python')
     anyenv: Optional[str] = os.path.expanduser(
         '~/.anyenv/envs/pyenv/shims/python')
